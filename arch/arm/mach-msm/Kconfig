@@ -2637,4 +2637,12 @@ config MSM_USE_USER_ACCESSIBLE_TIMERS
 	  Enables MSM-specific user accessible timers via a shared
 	  memory page containing the cycle counter.
 
+config MSM_HOTPLUG
+       bool "MSM hotplug driver"
+       depends on HOTPLUG_CPU && FB_MSM_LCD_NOTIFY
+       default y
+       help
+         The MSM hotplug driver controls on-/offlining of additional cores based on current cpu load.
+
+
 endif
