@@ -211,8 +211,9 @@ static void syn_handle_block_touch(struct synaptics_ts_data *ts, int enable)
 #define S2W_TIMEOUT2 60
 #define S2W_TIMEOUT3 50
 #define L2M_TIMEOUT 30
-#define DT2W_TIMEOUT_MAX 400
-#define DT2W_DELTA 230
+#define DT2W_TIMEOUT_MAX 120
+#define DT2W_TIMEOUT_MIN 1
+#define DT2W_DELTA 250
 #define L2W_TIMEOUT 50
 
 #define WAKE_GESTURE 0x0b
