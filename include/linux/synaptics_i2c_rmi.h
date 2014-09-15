@@ -194,6 +194,8 @@ extern void sweep2wake_setdev(struct input_dev * input_device);
 extern int in_phone_call;
 #endif
 
+extern uint8_t touchscreen_is_on(void);
+
 extern uint8_t getPowerKeyState(void);
 #endif /* CONFIG_TOUCHSCREEN_SYNAPTICS_3K */
 #endif /* _LINUX_SYNAPTICS_I2C_RMI_H */
