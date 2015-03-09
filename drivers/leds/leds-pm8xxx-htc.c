@@ -1,4 +1,3 @@
-
 /* Copyright (c) 2010-2011, Code Aurora Forum. All rights reserved.
  * Copyright (c) 2013, CyanogenMod - blink_buttons mod
  *
@@ -81,6 +80,20 @@ static int lut_coefficient = 100;
 static int dutys_array[64];
 
 static int blink_buttons = 1;
+
+static int __init get_bln_opt(char *bln)
+{
+  if (strcmp(bln, "0") == 0) {
+    blink_buttons = 0;
+  } else if (strcmp(bln, "1") == 0) {
+    blink_buttons = 1;
+  } else {
+    blink_buttons = 0;
+  }
+  return 1;
+}
+
+__setup("bln=", get_bln_opt);  
 
 u8 pm8xxxx_led_pwm_mode(int flag)
 {
