@@ -2747,43 +2747,52 @@ static int report_htc_logo_area(int x, int y) {
 	return 0;
 }
 
-static void dt2w_func(int x, int y) {
 
-	int delta_x = 0;
-	int delta_y = 0;
+static cputime64_t prev_time;
+static int prev_x = 0, prev_y = 0;
 
-        dt2w_time[1] = dt2w_time[0];
-        dt2w_time[0] = jiffies;
-
-	dt2w_x[1] = dt2w_x[0];
-        dt2w_x[0] = x;
-	dt2w_y[1] = dt2w_y[0];
-        dt2w_y[0] = y;
-
-	delta_x = (dt2w_x[0]-dt2w_x[1]);
-	delta_y = (dt2w_y[0]-dt2w_y[1]);
-
-//	printk(KERN_INFO "x=%d y=%d\n", dt2w_x[0], dt2w_y[0]);
-
-        if (scr_suspended) {
-		if (
-		y < 2880 && y > 2100
-		&& x > 150 && x < 1470
-		&& ((dt2w_time[0]-dt2w_time[1]) > DT2W_TIMEOUT_MIN)
-		&& ((dt2w_time[0]-dt2w_time[1]) < DT2W_TIMEOUT_MAX)
-		&& (abs(delta_x) < DT2W_DELTA)
-		&& (abs(delta_y) < DT2W_DELTA)
-		) {
-                       // printk("[DT2W]: OFF->ON\n");
-			dt2w_time[0] = 0;
-			dt2w_time[1] = 0;
-                        sweep2wake_pwrtrigger();
-			wakesleep_vib = 1;
-		}
-	}
-        return;
+static void reset_dt2w(void)
+{
+        prev_time = 0;
+        prev_x = 0;
+        prev_y = 0;
 }
 
+static void dt2w_func(int x, int y, cputime64_t trigger_time)
+{
+        if ((x > 0 && x < 150) || x > 1470 || y > 2880 || (!gestures_switch && dt2w_switch == 1 && (y > 0 && y < 2100))) {
+                reset_dt2w();
+                return;
+        }
+
+        if (prev_time == 0) {
+                prev_time = trigger_time;
+                prev_x = x;
+                prev_y = y;
+        } else if ((trigger_time - prev_time) > DT2W_TIMEOUT_MAX) {
+                prev_time = trigger_time;
+                prev_x = x;
+                prev_y = y;
+        } else {
+                if (((abs(x - prev_x) < DT2W_DELTA) && (abs(y - prev_y) < DT2W_DELTA))
+						|| (prev_x == 0 && prev_y == 0)) {
+                        reset_dt2w();
+			pr_debug("[DT2W]: ON\n");
+			wake_lock_timeout(&l2w_wakelock, HZ/2);
+			if (gestures_switch) {
+				report_gesture(5);
+			} else {
+	                        wakesleep_vib = 1;
+	                        sweep2wake_pwrtrigger();
+			}
+
+                } else {
+			prev_time = trigger_time;
+			prev_x = x;
+			prev_y = y;
+                }
+        }
+}
 #endif
 
 static void synaptics_ts_finger_func(struct synaptics_ts_data *ts)
