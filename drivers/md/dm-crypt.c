@@ -1168,8 +1168,10 @@ static void kcryptd_async_done(struct crypto_async_request *async_req,
 	struct dm_crypt_io *io = container_of(ctx, struct dm_crypt_io, ctx);
 	struct crypt_config *cc = io->target->private;
 
-	if (error == -EINPROGRESS)
+	if (error == -EINPROGRESS) {
+		complete(&ctx->restart);
 		return;
+	}
 
 	if (!error && cc->iv_gen_ops && cc->iv_gen_ops->post)
 		error = cc->iv_gen_ops->post(cc, iv_of_dmreq(cc, dmreq), dmreq);
@@ -1179,16 +1181,13 @@ static void kcryptd_async_done(struct crypto_async_request *async_req,
 
 	mempool_free(req_of_dmreq(cc, dmreq), cc->req_pool);
 
-	if (!atomic_dec_and_test(&ctx->pending))
-		goto done;
+	if (!atomic_dec_and_test(&ctx->cc_pending))
+		return;
 
 	if (bio_data_dir(io->base_bio) == READ)
 		kcryptd_crypt_read_done(io);
 	else
 		kcryptd_crypt_write_io_submit(io, 1);
-done:
-	if (!completion_done(&ctx->restart))
-		complete(&ctx->restart);
 }
 
 static void kcryptd_crypt(struct work_struct *work)
