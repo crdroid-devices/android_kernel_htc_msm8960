@@ -900,6 +900,7 @@ void bpf_jit_compile(struct sk_filter *fp)
 			kfree(ctx.imms);
 #endif
 		bpf_jit_binary_free(header);
+		module_free(NULL, ctx.target);
 		goto out;
 	}
 	build_epilogue(&ctx);
